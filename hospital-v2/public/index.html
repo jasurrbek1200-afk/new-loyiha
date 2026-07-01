@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MedCenter — Navbat Tizimi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --blue:#1D4ED8;--blue2:#3B82F6;--blue3:#93C5FD;--blue-dark:#1e3a8a;
+  --green:#059669;--green2:#10B981;--green3:#6EE7B7;
+  --yellow:#D97706;--yellow2:#F59E0B;--yellow3:#FCD34D;
+  --dark:#0F172A;--dark2:#1E293B;--dark3:#334155;
+  --text:#F8FAFC;--text2:#CBD5E1;--text3:#94A3B8;
+  --glass:rgba(255,255,255,0.05);--glass2:rgba(255,255,255,0.1);
+  --border:rgba(255,255,255,0.1);
+  --r:16px;--r2:24px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--dark);color:var(--text);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;scroll-behavior:smooth}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--dark2)}::-webkit-scrollbar-thumb{background:var(--blue);border-radius:3px}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,23,42,0.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--blue2),var(--green2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:8px}
+.nav-links button{background:none;border:none;color:var(--text2);padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:14px;transition:all .2s}
+.nav-links button:hover,.nav-links button.active{background:var(--glass2);color:var(--text)}
+.nav-time{font-size:13px;color:var(--text3);font-weight:500}
+
+/* HERO */
+#hero{height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+#bg-canvas{position:absolute;inset:0;z-index:0}
+.hero-content{position:relative;z-index:1;text-align:center;max-width:700px;padding:0 24px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:var(--blue3);padding:8px 18px;border-radius:100px;font-size:13px;font-weight:600;margin-bottom:24px}
+.hero-badge::before{content:'';width:8px;height:8px;background:var(--green2);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.2)}}
+.hero-h1{font-family:'Syne',sans-serif;font-size:clamp(40px,7vw,72px);font-weight:800;line-height:1.1;margin-bottom:20px}
+.hero-h1 span{background:linear-gradient(135deg,var(--blue2),var(--green2),var(--yellow2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{color:var(--text2);font-size:18px;margin-bottom:36px;line-height:1.6}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:none;padding:14px 32px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 0 30px rgba(59,130,246,0.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(59,130,246,0.5)}
+.btn-outline{background:var(--glass);border:1px solid var(--border);color:var(--text);padding:14px 32px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;backdrop-filter:blur(10px)}
+.btn-outline:hover{background:var(--glass2);transform:translateY(-2px)}
+.hero-stats{display:flex;gap:32px;justify-content:center;margin-top:48px;flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat-n{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--blue2),var(--green2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-stat-l{font-size:13px;color:var(--text3)}
+
+/* SECTIONS */
+section{padding:80px 40px;max-width:1200px;margin:0 auto}
+.section-tag{display:inline-block;background:rgba(59,130,246,0.15);color:var(--blue3);padding:6px 14px;border-radius:100px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px}
+.section-h2{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,42px);font-weight:800;margin-bottom:12px}
+.section-sub{color:var(--text2);font-size:16px;max-width:500px;line-height:1.6;margin-bottom:40px}
+
+/* MAP */
+#campus-map-section{padding:80px 0;max-width:100%;background:linear-gradient(180deg,var(--dark) 0%,var(--dark2) 50%,var(--dark) 100%)}
+#campus-map-section .inner{max-width:1200px;margin:0 auto;padding:0 40px}
+.map-wrap{background:var(--dark2);border:1px solid var(--border);border-radius:var(--r2);padding:32px;position:relative;overflow:hidden}
+.map-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--green2),var(--yellow2))}
+.floor-tabs{display:flex;gap:8px;margin-bottom:24px}
+.floor-tab{padding:8px 20px;border-radius:100px;border:1px solid var(--border);background:none;color:var(--text2);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.floor-tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.floor-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.map-room{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.map-room::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--room-color,var(--blue2));border-radius:3px 0 0 3px}
+.map-room:hover{transform:translateY(-2px);border-color:var(--room-color,var(--blue2));box-shadow:0 0 20px rgba(59,130,246,0.2)}
+.map-room.active{background:rgba(59,130,246,0.1);border-color:var(--blue2)}
+.room-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--room-color,var(--blue2));margin-bottom:4px}
+.room-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.room-queue-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:100px;background:rgba(255,255,255,0.08);color:var(--text2)}
+.path-indicator{margin-top:12px;padding:10px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:10px;font-size:12px;color:var(--green3);display:none}
+.path-indicator.show{display:block}
+
+/* 3D VIEW */
+#view3d{width:100%;height:360px;border-radius:var(--r2);overflow:hidden;background:var(--dark2);border:1px solid var(--border);position:relative}
+#view3d canvas{width:100%!important;height:100%!important}
+.view3d-label{position:absolute;top:16px;left:16px;background:var(--glass2);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--text2)}
+.view3d-controls{position:absolute;bottom:16px;right:16px;display:flex;gap:8px}
+.view3d-btn{background:var(--glass2);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text2);cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:12px}
+.view3d-btn:hover{background:var(--glass);color:var(--text)}
+
+/* DEPARTMENTS */
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+.dept-card{background:var(--dark2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;transition:all .3s;cursor:pointer;position:relative}
+.dept-card:hover{transform:translateY(-4px);border-color:rgba(59,130,246,0.4);box-shadow:0 20px 60px rgba(0,0,0,0.3),0 0 30px rgba(59,130,246,0.1)}
+.dept-card-top{padding:24px 24px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.dept-floor-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px}
+.f1{background:rgba(59,130,246,0.15);color:var(--blue3)}
+.f2{background:rgba(16,185,129,0.15);color:var(--green3)}
+.f3{background:rgba(245,158,11,0.15);color:var(--yellow3)}
+.dept-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.dept-room-n{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text3)}
+.dept-body{padding:16px 24px 24px}
+.dept-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
+.dept-spec{font-size:13px;color:var(--text3);margin-bottom:16px}
+.dept-doctor{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px;background:var(--glass);border-radius:12px}
+.doctor-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--green2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.doctor-info-name{font-size:14px;font-weight:600}
+.doctor-info-spec{font-size:12px;color:var(--text3)}
+.dept-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.d-stat{text-align:center;padding:10px 6px;background:var(--glass);border-radius:10px}
+.d-stat-v{font-size:16px;font-weight:700}
+.d-stat-l{font-size:10px;color:var(--text3);margin-top:2px}
+.dept-schedule{display:flex;gap:8px;flex-wrap:wrap}
+.sched-badge{display:flex;align-items:center;gap:4px;font-size:11px;padding:4px 10px;border-radius:100px;background:var(--glass)}
+.sched-badge.lunch{background:rgba(245,158,11,0.1);color:var(--yellow3)}
+.sched-badge.work{background:rgba(16,185,129,0.1);color:var(--green3)}
+.rating-stars{color:var(--yellow2);font-size:12px}
+.dept-card-bottom{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px}
+.book-btn{flex:1;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border:none;padding:10px;border-radius:10px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.book-btn:hover{opacity:.9;transform:scale(1.01)}
+.detail-btn{background:var(--glass);border:1px solid var(--border);color:var(--text2);padding:10px 14px;border-radius:10px;font-family:'Space Grotesk',sans-serif;font-size:13px;cursor:pointer}
+.detail-btn:hover{background:var(--glass2);color:var(--text)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--dark2);border:1px solid var(--border);border-radius:var(--r2);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;position:relative}
+.modal-head{padding:24px 24px 0;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+.modal-close{background:var(--glass);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.modal-body{padding:0 24px 24px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.form-input{width:100%;background:var(--glass);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-family:'Space Grotesk',sans-serif;font-size:14px;transition:border-color .2s}
+.form-input:focus{outline:none;border-color:var(--blue2)}
+.photo-upload{border:2px dashed var(--border);border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.photo-upload:hover{border-color:var(--blue2);background:rgba(59,130,246,0.05)}
+.photo-upload input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.photo-preview{width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:8px;display:none}
+.photo-icon{font-size:32px;margin-bottom:8px}
+.photo-text{font-size:13px;color:var(--text3)}
+.ticket-card{background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(16,185,129,0.15));border:1px solid rgba(59,130,246,0.3);border-radius:var(--r2);padding:24px;text-align:center;margin-top:20px;display:none}
+.ticket-num{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;background:linear-gradient(135deg,var(--blue2),var(--green2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ticket-label{font-size:13px;color:var(--text2);margin-bottom:4px}
+.ticket-wait{font-size:20px;font-weight:700;color:var(--green2);margin-top:8px}
+
+/* AI CHAT */
+#ai-section{padding:80px 40px}
+.ai-wrap{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1200px;margin:0 auto}
+@media(max-width:768px){.ai-wrap{grid-template-columns:1fr}}
+.ai-card{background:var(--dark2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;display:flex;flex-direction:column;height:520px}
+.ai-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.ai-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--green2));display:flex;align-items:center;justify-content:center;font-size:18px}
+.ai-name{font-weight:700;font-size:15px}
+.ai-status{font-size:12px;color:var(--green2);display:flex;align-items:center;gap:4px}
+.ai-status::before{content:'';width:6px;height:6px;background:var(--green2);border-radius:50%;animation:pulse 2s infinite}
+.ai-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+.ai-msg{max-width:80%;padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.5}
+.ai-msg.bot{background:var(--glass2);align-self:flex-start;border-radius:4px 16px 16px 16px}
+.ai-msg.user{background:linear-gradient(135deg,var(--blue),var(--blue2));align-self:flex-end;border-radius:16px 4px 16px 16px}
+.ai-msg.typing{color:var(--text3);font-style:italic}
+.ai-input-wrap{padding:16px;border-top:1px solid var(--border);display:flex;gap:8px}
+.ai-input{flex:1;background:var(--glass);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:12px;font-family:'Space Grotesk',sans-serif;font-size:14px}
+.ai-input:focus{outline:none;border-color:var(--blue2)}
+.ai-send{background:linear-gradient(135deg,var(--blue),var(--blue2));border:none;color:#fff;width:44px;height:44px;border-radius:12px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.ai-send:hover{opacity:.9}
+.quick-btns{padding:0 16px 12px;display:flex;gap:6px;flex-wrap:wrap}
+.quick-btn{background:var(--glass);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:100px;font-size:12px;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .2s}
+.quick-btn:hover{background:rgba(59,130,246,0.2);color:var(--blue3);border-color:var(--blue)}
+.symptom-card{background:var(--dark2);border:1px solid var(--border);border-radius:var(--r2);padding:24px}
+.symptom-result{margin-top:20px;background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(59,130,246,0.1));border:1px solid rgba(16,185,129,0.2);border-radius:var(--r);padding:20px;display:none}
+
+/* QUEUE LIVE */
+.queue-board{background:var(--dark2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;max-width:1200px;margin:0 auto}
+.queue-board-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.queue-board-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green2);font-weight:600}
+.live-dot{width:8px;height:8px;background:var(--green2);border-radius:50%;animation:pulse 2s infinite}
+.queue-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--border)}
+.queue-col{background:var(--dark2);padding:16px}
+.queue-col-head{font-size:12px;font-weight:700;color:var(--text3);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em}
+.queue-item{padding:8px 10px;border-radius:8px;margin-bottom:6px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+.queue-item.waiting{background:rgba(59,130,246,0.08);border-left:2px solid var(--blue2)}
+.queue-item.in_progress{background:rgba(16,185,129,0.12);border-left:2px solid var(--green2)}
+.q-ticket{font-family:'Syne',sans-serif;font-weight:700;font-size:13px}
+.q-wait{color:var(--text3)}
+
+/* DOCTOR PANEL */
+#doctor-panel-section{padding:80px 40px}
+.doctor-panel-wrap{max-width:1200px;margin:0 auto}
+.doctor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.doctor-panel-card{background:var(--dark2);border:1px solid var(--border);border-radius:var(--r2);padding:20px}
+.dp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.dp-badge{font-size:11px;padding:3px 10px;border-radius:100px}
+.dp-queue-n{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin:8px 0 2px}
+.dp-next-btn{width:100%;margin-top:12px;background:linear-gradient(135deg,var(--green),var(--green2));border:none;color:#fff;padding:10px;border-radius:10px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.dp-next-btn:disabled{opacity:.4;cursor:not-allowed}
+.dp-next-btn:not(:disabled):hover{opacity:.9}
+
+/* FOOTER */
+footer{background:var(--dark2);border-top:1px solid var(--border);padding:40px;text-align:center;color:var(--text3);font-size:13px}
+.footer-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--blue2),var(--green2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+
+/* ANIMATIONS */
+.fade-up{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.fade-up.visible{opacity:1;transform:none}
+.glow-blue{box-shadow:0 0 40px rgba(59,130,246,0.2)}
+.gradient-border{background:linear-gradient(var(--dark2),var(--dark2)) padding-box,linear-gradient(135deg,var(--blue),var(--green2),var(--yellow2)) border-box;border:2px solid transparent}
+
+@media(max-width:768px){
+  nav{padding:0 16px}section,#ai-section,#doctor-panel-section{padding:60px 16px}
+  .hero-h1{font-size:36px}.dept-grid{grid-template-columns:1fr}.hero-btns{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">🏥 MedCenter</div>
+  <div class="nav-links">
+    <button onclick="scrollTo('#map-s')" class="active">Xarita</button>
+    <button onclick="scrollTo('#depts')">Bo'limlar</button>
+    <button onclick="scrollTo('#ai-s')">AI Yordam</button>
+    <button onclick="scrollTo('#queue-s')">Navbat</button>
+    <button id="docPanelBtn" onclick="scrollTo('#doc-panel')">Shifokor paneli</button>
+  </div>
+  <div class="nav-time" id="nav-clock">—</div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="bg-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-badge">🟢 Tizim faol — real vaqtda ishlaydi</div>
+    <h1 class="hero-h1">MedCenter<br/><span>Navbat Tizimi</span></h1>
+    <p class="hero-sub">O'zbekiston shifokorlik muassasasi uchun qurilgan zamonaviy raqamli navbat tizimi. AI yordamida to'g'ri bo'limga yo'naltirilasiz.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="scrollTo('#map-s')">🗺 Kampus xaritasi</button>
+      <button class="btn-outline" onclick="scrollTo('#ai-s')">🤖 AI Yordam olish</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-n">10</div><div class="hero-stat-l">Bo'lim</div></div>
+      <div class="hero-stat"><div class="hero-stat-n">3</div><div class="hero-stat-l">Qavat</div></div>
+      <div class="hero-stat"><div class="hero-stat-n" id="total-q">—</div><div class="hero-stat-l">Navbatda</div></div>
+      <div class="hero-stat"><div class="hero-stat-n">24/7</div><div class="hero-stat-l">Online</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CAMPUS MAP -->
+<div id="map-s" style="background:var(--dark2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+<section id="campus-map-section" style="padding:80px 40px;max-width:1200px;margin:0 auto">
+  <span class="section-tag">Kampus xaritasi</span>
+  <h2 class="section-h2">Bino rejasi va yo'naltirish</h2>
+  <p class="section-sub">Har bir xona qavat bo'yicha ranglar bilan ko'rsatilgan. Xonani bosing — qanday borish ko'rsatiladi.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start">
+    <div>
+      <div class="map-wrap">
+        <div class="floor-tabs">
+          <button class="floor-tab active" onclick="setFloor(1,this)" style="border-color:var(--blue);color:var(--blue3)">🔵 1-Qavat</button>
+          <button class="floor-tab" onclick="setFloor(2,this)" style="">🟢 2-Qavat</button>
+          <button class="floor-tab" onclick="setFloor(3,this)" style="">🟡 3-Qavat</button>
+        </div>
+        <div class="floor-map" id="floor-map-grid"></div>
+        <div class="path-indicator" id="path-box">
+          <strong>📍 Yo'nalish:</strong> <span id="path-text"></span>
+        </div>
+      </div>
+      <!-- 3D VIEW -->
+      <div style="margin-top:20px">
+        <div id="view3d">
+          <div class="view3d-label">🏢 3D Bino ko'rinishi — sichqoncha bilan aylantiring</div>
+          <div class="view3d-controls">
+            <button class="view3d-btn" onclick="resetCamera()">↺ Qayta sozla</button>
+            <button class="view3d-btn" onclick="toggleWireframe()">⬡ Chizma rejim</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="map-detail-panel" style="background:var(--dark2);border:1px solid var(--border);border-radius:var(--r2);padding:24px;position:sticky;top:80px">
+      <p style="color:var(--text3);font-size:14px;text-align:center;padding:40px 0">Xaritadan xona tanlang</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- DEPARTMENTS -->
+<section id="depts" style="max-width:1200px;margin:0 auto;padding:80px 40px">
+  <span class="section-tag">Bo'limlar</span>
+  <h2 class="section-h2">10 ta tibbiy bo'lim</h2>
+  <p class="section-sub">Har bir bo'limda malakali shifokor, ish jadvali va navbat holati ko'rsatiladi.</p>
+  <div class="dept-grid" id="dept-grid"></div>
+</section>
+
+<!-- AI + SYMPTOM -->
+<section id="ai-s" style="padding:80px 40px;background:linear-gradient(180deg,var(--dark) 0%,var(--dark2) 100%)">
+<div style="max-width:1200px;margin:0 auto">
+  <span class="section-tag">AI Yordamchi</span>
+  <h2 class="section-h2">O'zbek tilida AI Yordamchi</h2>
+  <p class="section-sub">Alomatingizni yozing — AI to'g'ri bo'limga yo'naltiradi.</p>
+  <div class="ai-wrap">
+    <!-- Chat -->
+    <div class="ai-card glow-blue">
+      <div class="ai-head">
+        <div class="ai-avatar">🤖</div>
+        <div>
+          <div class="ai-name">MedBot — AI Yordamchi</div>
+          <div class="ai-status">Faol</div>
+        </div>
+      </div>
+      <div class="ai-messages" id="ai-msgs">
+        <div class="ai-msg bot">Assalomu alaykum! Men MedBot — shifoxona AI yordamchisiman. Alomatingizni o'zbek tilida yozing, to'g'ri bo'limga yo'naltirib beraman. 😊</div>
+      </div>
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="quickMsg('Boshim og\'riyapti')">Bosh og'riq</button>
+        <button class="quick-btn" onclick="quickMsg('Tishim og\'riyapti')">Tish og'riq</button>
+        <button class="quick-btn" onclick="quickMsg('Ko\'zim og\'riyapti')">Ko'z og'riq</button>
+        <button class="quick-btn" onclick="quickMsg('Yuragim og\'riyapti')">Yurak og'riq</button>
+      </div>
+      <div class="ai-input-wrap">
+        <input class="ai-input" id="ai-input" placeholder="Alomatingizni yozing..." onkeydown="if(event.key==='Enter')sendAI()"/>
+        <button class="ai-send" onclick="sendAI()">➤</button>
+      </div>
+    </div>
+    <!-- Symptom quick match -->
+    <div class="symptom-card">
+      <h3 style="font-family:'Syne',sans-serif;font-size:20px;margin-bottom:8px">⚡ Tez yo'naltirish</h3>
+      <p style="color:var(--text2);font-size:14px;margin-bottom:20px">Alomatingizni yozing, eng tez va mos bo'limni topamiz.</p>
+      <div class="form-group">
+        <input class="form-input" id="sym-input" placeholder="Masalan: boshim og'riyapti, isitmam bor..." onkeydown="if(event.key==='Enter')matchSymptom()"/>
+      </div>
+      <button class="btn-primary" style="width:100%" onclick="matchSymptom()">🔍 Bo'lim topish</button>
+      <div class="symptom-result" id="sym-result"></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- QUEUE LIVE -->
+<section id="queue-s" style="padding:80px 40px;max-width:1200px;margin:0 auto">
+  <span class="section-tag">Navbat holati</span>
+  <h2 class="section-h2">Real vaqtda navbatlar</h2>
+  <p class="section-sub">Barcha bo'limlardagi navbatlar har 5 soniyada yangilanadi.</p>
+  <div class="queue-board">
+    <div class="queue-board-head">
+      <span class="queue-board-title">Navbat paneli</span>
+      <span class="live-badge"><span class="live-dot"></span>Jonli yangilanish</span>
+    </div>
+    <div class="queue-grid" id="queue-grid"></div>
+  </div>
+</section>
+
+<!-- DOCTOR PANEL -->
+<section id="doc-panel" style="padding:80px 40px;background:var(--dark2)">
+<div class="doctor-panel-wrap">
+  <span class="section-tag">Shifokor paneli</span>
+  <h2 class="section-h2">Navbat boshqaruvi</h2>
+  <p class="section-sub">Shifokorlar uchun — keyingi bemorni chaqirish va yakunlash.</p>
+  <div class="doctor-grid" id="doctor-grid"></div>
+</div>
+</section>
+
+<!-- BOOKING MODAL -->
+<div class="modal-overlay" id="book-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modal-dept-name">Navbatga yozilish</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Ismingiz</label>
+        <input class="form-input" id="patient-name" placeholder="To'liq ismingizni kiriting"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rasmingiz (ixtiyoriy)</label>
+        <div class="photo-upload" id="photo-drop">
+          <input type="file" accept="image/*" onchange="handlePhoto(this)"/>
+          <img class="photo-preview" id="photo-prev"/>
+          <div class="photo-icon" id="photo-icon">📷</div>
+          <div class="photo-text" id="photo-txt">Rasm yuklash uchun bosing yoki sudrang</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kalit so'z (ixtiyoriy)</label>
+        <input class="form-input" id="patient-keyword" placeholder="Masalan: shoshilinch, VIP, bolalar..."/>
+      </div>
+      <button class="book-btn" style="width:100%;padding:14px;font-size:15px;margin-top:8px" onclick="confirmBook()">✅ Navbatga yozilish</button>
+      <div class="ticket-card" id="ticket-result">
+        <div class="ticket-label">Bilet raqamingiz</div>
+        <div class="ticket-num" id="ticket-num">—</div>
+        <div class="ticket-wait" id="ticket-wait">—</div>
+        <div style="color:var(--text3);font-size:12px;margin-top:12px">Navbat yaqinlashganda xabar beriladi</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">MedCenter</div>
+  <p>O'zbekiston zamonaviy tibbiyot navbat tizimi &copy; 2024</p>
+</footer>
+
+<script>
+const API = ''
+let depts = []
+let activeFloor = 1
+let selectedDept = null
+let photoData = null
+let aiHistory = []
+let scene, camera, renderer, building, wireframe = false
+
+// CLOCK
+function updateClock(){
+  const now = new Date()
+  document.getElementById('nav-clock').textContent = now.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
+}
+setInterval(updateClock, 1000)
+updateClock()
+
+// SCROLL
+function scrollTo(sel){document.querySelector(sel)?.scrollIntoView({behavior:'smooth'})}
+
+// THREE.JS 3D Building
+function init3D(){
+  const container = document.getElementById('view3d')
+  scene = new THREE.Scene()
+  scene.background = new THREE.Color(0x0F172A)
+  scene.fog = new THREE.Fog(0x0F172A, 20, 60)
+  camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 100)
+  camera.position.set(8, 6, 12)
+  camera.lookAt(0, 2, 0)
+  renderer = new THREE.WebGLRenderer({antialias:true})
+  renderer.setSize(container.clientWidth, container.clientHeight)
+  renderer.shadowMap.enabled = true
+  container.appendChild(renderer.domElement)
+
+  // Lights
+  const ambLight = new THREE.AmbientLight(0x1E3A8A, 0.8)
+  scene.add(ambLight)
+  const dirLight = new THREE.DirectionalLight(0x3B82F6, 1.5)
+  dirLight.position.set(5,8,5)
+  dirLight.castShadow = true
+  scene.add(dirLight)
+  const greenLight = new THREE.PointLight(0x10B981, 1, 20)
+  greenLight.position.set(-5, 4, -3)
+  scene.add(greenLight)
+  const yellowLight = new THREE.PointLight(0xF59E0B, 0.5, 15)
+  yellowLight.position.set(3, 6, -5)
+  scene.add(yellowLight)
+
+  // Ground
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.MeshLambertMaterial({color:0x1E293B}))
+  ground.rotation.x = -Math.PI/2
+  ground.receiveShadow = true
+  scene.add(ground)
+
+  // Grid
+  const grid = new THREE.GridHelper(30, 30, 0x334155, 0x1E293B)
+  scene.add(grid)
+
+  // Building floors
+  const floorColors = [0x1D4ED8, 0x059669, 0xD97706]
+  const floorMats = floorColors.map(c => new THREE.MeshPhongMaterial({color:c, transparent:true, opacity:0.85, shininess:60}))
+  building = new THREE.Group()
+
+  for(let f=0;f<3;f++){
+    const geo = new THREE.BoxGeometry(6, 2.5, 4)
+    const mesh = new THREE.Mesh(geo, floorMats[f])
+    mesh.position.y = f*2.5 + 1.25
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    building.add(mesh)
+
+    // Windows
+    const winMat = new THREE.MeshPhongMaterial({color:0x93C5FD, transparent:true, opacity:0.6, emissive:0x1D4ED8, emissiveIntensity:0.3})
+    for(let w=0;w<3;w++){
+      const win = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.7,0.05), winMat)
+      win.position.set(-2+w*2, f*2.5+1.25, 2.03)
+      building.add(win)
+    }
+
+    // Floor label
+    const edges = new THREE.EdgesGeometry(geo)
+    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.15}))
+    line.position.y = f*2.5+1.25
+    building.add(line)
+  }
+
+  // Roof
+  const roofGeo = new THREE.ConeGeometry(4.5,1.5,4)
+  const roofMesh = new THREE.Mesh(roofGeo, new THREE.MeshPhongMaterial({color:0x1E293B, shininess:30}))
+  roofMesh.position.y = 9.25
+  building.add(roofMesh)
+
+  // Flag
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,1.5), new THREE.MeshLambertMaterial({color:0x94A3B8}))
+  pole.position.set(0,10.5,0)
+  building.add(pole)
+
+  scene.add(building)
+
+  // Plus signs / cross (hospital)
+  const crossH = new THREE.Mesh(new THREE.BoxGeometry(1.2,0.3,0.1), new THREE.MeshPhongMaterial({color:0xff0000, emissive:0xff0000, emissiveIntensity:0.5}))
+  const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.3,1.2,0.1), new THREE.MeshPhongMaterial({color:0xff0000, emissive:0xff0000, emissiveIntensity:0.5}))
+  crossH.position.set(0,11.2,0)
+  crossV.position.set(0,11.2,0)
+  building.add(crossH)
+  building.add(crossV)
+
+  // Mouse orbit
+  let isDragging=false, prevX=0, prevY=0
+  renderer.domElement.addEventListener('mousedown', e=>{isDragging=true; prevX=e.clientX; prevY=e.clientY})
+  window.addEventListener('mouseup', ()=>isDragging=false)
+  window.addEventListener('mousemove', e=>{
+    if(!isDragging) return
+    const dx=(e.clientX-prevX)*0.005, dy=(e.clientY-prevY)*0.005
+    building.rotation.y += dx
+    prevX=e.clientX; prevY=e.clientY
+  })
+
+  animate3D()
+  window.addEventListener('resize', ()=>{
+    camera.aspect = container.clientWidth/container.clientHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(container.clientWidth, container.clientHeight)
+  })
+}
+
+function animate3D(){
+  requestAnimationFrame(animate3D)
+  if(!isDragging && building) building.rotation.y += 0.003
+  renderer.render(scene, camera)
+}
+let isDragging = false
+
+function resetCamera(){
+  if(building) building.rotation.y = 0
+}
+function toggleWireframe(){
+  wireframe = !wireframe
+  if(building) building.traverse(c=>{ if(c.isMesh && c.material) c.material.wireframe = wireframe })
+}
+
+// PARTICLE BG
+function initParticles(){
+  const canvas = document.getElementById('bg-canvas')
+  const ctx = canvas.getContext('2d')
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight
+  const particles = Array.from({length:80},()=>({
+    x:Math.random()*canvas.width, y:Math.random()*canvas.height,
+    vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.3,
+    r:Math.random()*2+1,
+    c:[`rgba(59,130,246,`,`rgba(16,185,129,`,`rgba(245,158,11,`][Math.floor(Math.random()*3)]
+  }))
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height)
+    ctx.fillStyle='rgba(15,23,42,0.4)'
+    ctx.fillRect(0,0,canvas.width,canvas.height)
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy
+      if(p.x<0||p.x>canvas.width) p.vx*=-1
+      if(p.y<0||p.y>canvas.height) p.vy*=-1
+      ctx.beginPath()
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2)
+      ctx.fillStyle=p.c+'.6)'
+      ctx.fill()
+    })
+    particles.forEach((a,i)=>particles.slice(i+1).forEach(b=>{
+      const d=Math.hypot(a.x-b.x,a.y-b.y)
+      if(d<120){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(59,130,246,${.15*(1-d/120)})`;ctx.stroke()}
+    }))
+    requestAnimationFrame(draw)
+  }
+  draw()
+  window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight})
+}
+
+// DATA
+async function loadDepts(){
+  const r = await fetch('/api/departments')
+  depts = await r.json()
+  renderFloorMap()
+  renderDeptGrid()
+  renderQueueGrid()
+  renderDoctorGrid()
+  const total = depts.reduce((s,d)=>s+d.queue,0)
+  document.getElementById('total-q').textContent = total
+}
+
+function floorColor(f){ return f===1?'var(--blue2)':f===2?'var(--green2)':'var(--yellow2)' }
+function floorClass(f){ return f===1?'f1':f===2?'f2':'f3' }
+function waitLabel(d){ const h=Math.floor(d.waitMinutes/60),m=d.waitMinutes%60; return h>0?`${h}s ${m}d`:`${m} daqiqa` }
+
+function setFloor(f, btn){
+  activeFloor=f
+  document.querySelectorAll('.floor-tab').forEach(b=>b.classList.remove('active'))
+  btn.classList.add('active')
+  renderFloorMap()
+}
+
+function renderFloorMap(){
+  const grid = document.getElementById('floor-map-grid')
+  const floordepts = depts.filter(d=>d.floor===activeFloor)
+  grid.innerHTML = floordepts.map(d=>`
+    <div class="map-room ${selectedDept?.id===d.id?'active':''}" onclick="selectMapRoom('${d.id}')" style="--room-color:${floorColor(d.floor)}">
+      <div class="room-num">${d.room}</div>
+      <div class="room-title">${d.name}</div>
+      <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
+        <span class="room-queue-badge">👥 ${d.queue} navbat</span>
+        <span class="room-queue-badge">⏱ ~${waitLabel(d)}</span>
+      </div>
+    </div>
+  `).join('')
+}
+
+const paths = {1:'Kirish eshikdan to\'g\'ri kiring → koridorda o\'ngga buriling → 1-qavat xonalari',2:'Kirish eshikdan kiring → zinapoyadan 2-qavatga chiqing → chap tomonga yuring',3:'Kirish eshikdan kiring → lift yoki zinapoya bilan 3-qavatga chiqing'}
+
+function selectMapRoom(id){
+  selectedDept = depts.find(d=>d.id===id)
+  renderFloorMap()
+  const d = selectedDept
+  if(!d) return
+  const panel = document.getElementById('map-detail-panel')
+  panel.innerHTML = `
+    <div>
+      <span class="dept-floor-badge ${floorClass(d.floor)}" style="margin-bottom:12px;display:inline-block">${d.floor}-Qavat • ${d.room}-xona</span>
+      <h3 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px">${d.name}</h3>
+      <p style="color:var(--text3);font-size:13px;margin-bottom:16px">${d.doctorSpeciality}</p>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--glass);border-radius:12px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,${floorColor(d.floor)},var(--blue-dark));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">${d.doctorName.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+        <div>
+          <div style="font-weight:600;font-size:14px">${d.doctorName}</div>
+          <div style="color:var(--text3);font-size:12px">★ ${d.rating} (${d.reviews} sharh)</div>
+        </div>
+      </div>
+      <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:14px;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:6px">📍 Yo'nalish</div>
+        <div style="font-size:13px;color:var(--green3)">${paths[d.floor]}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        <div style="background:var(--glass);padding:10px;border-radius:10px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:${floorColor(d.floor)}">${d.queue}</div>
+          <div style="font-size:11px;color:var(--text3)">Navbatda</div>
+        </div>
+        <div style="background:var(--glass);padding:10px;border-radius:10px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:var(--green2)">${waitLabel(d)}</div>
+          <div style="font-size:11px;color:var(--text3)">Kutish</div>
+        </div>
+      </div>
+      <button class="book-btn" onclick="openModal('${d.id}')">📝 Navbatga yozilish</button>
+    </div>
+  `
+}
+
+function renderDeptGrid(){
+  const grid = document.getElementById('dept-grid')
+  grid.innerHTML = depts.map(d=>`
+    <div class="dept-card fade-up">
+      <div class="dept-card-top">
+        <div>
+          <span class="dept-floor-badge ${floorClass(d.floor)}">${d.floor}-Qavat</span>
+          <div class="dept-room-n" style="margin-top:6px">${d.room}-xona</div>
+        </div>
+        <div>
+          <div class="rating-stars">${'★'.repeat(Math.round(d.rating))}${'☆'.repeat(5-Math.round(d.rating))}</div>
+          <div style="font-size:11px;color:var(--text3);text-align:right">${d.rating} (${d.reviews})</div>
+        </div>
+      </div>
+      <div class="dept-body">
+        <div class="dept-name">${d.name}</div>
+        <div class="dept-spec">${d.doctorSpeciality}</div>
+        <div class="dept-doctor">
+          <div class="doctor-avatar">${d.doctorName.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+          <div>
+            <div class="doctor-info-name">${d.doctorName}</div>
+            <div class="doctor-info-spec" style="font-size:11px;color:var(--text3);margin-top:2px">${d.doctorBio.slice(0,60)}...</div>
+          </div>
+        </div>
+        <div class="dept-stats">
+          <div class="d-stat"><div class="d-stat-v" style="color:${floorColor(d.floor)}">${d.queue}</div><div class="d-stat-l">Navbat</div></div>
+          <div class="d-stat"><div class="d-stat-v" style="color:var(--green2)">${waitLabel(d)}</div><div class="d-stat-l">Kutish</div></div>
+          <div class="d-stat"><div class="d-stat-v" style="color:var(--yellow2)">${d.perPatientMinutes}d</div><div class="d-stat-l">Qabul</div></div>
+        </div>
+        <div class="dept-schedule">
+          <span class="sched-badge work">🕗 ${d.workStart}–${d.workEnd}</span>
+          <span class="sched-badge lunch">🍽 Tushlik ${d.lunchStart}–${d.lunchEnd}</span>
+        </div>
+      </div>
+      <div class="dept-card-bottom">
+        <button class="book-btn" onclick="openModal('${d.id}')">Navbatga yozilish</button>
+        <button class="detail-btn" onclick="selectMapRoom('${d.id}');scrollTo('#map-s')">📍 Xarita</button>
+      </div>
+    </div>
+  `).join('')
+  observeFadeUp()
+}
+
+function renderQueueGrid(){
+  const grid = document.getElementById('queue-grid')
+  grid.innerHTML = depts.map(d=>`
+    <div class="queue-col">
+      <div class="queue-col-head" style="color:${floorColor(d.floor)}">${d.name} <span style="color:var(--text3)">${d.room}</span></div>
+      <div class="queue-item ${d.queue>0?'waiting':''}">
+        <span class="q-ticket" style="color:${floorColor(d.floor)}">${d.queue} kishi</span>
+        <span class="q-wait">${waitLabel(d)}</span>
+      </div>
+    </div>
+  `).join('')
+}
+
+function renderDoctorGrid(){
+  const grid = document.getElementById('doctor-grid')
+  grid.innerHTML = depts.map(d=>`
+    <div class="doctor-panel-card">
+      <div class="dp-head">
+        <div>
+          <div style="font-size:12px;color:var(--text3)">${d.room}-xona</div>
+          <div style="font-weight:700;font-size:15px">${d.name}</div>
+          <div style="font-size:12px;color:var(--text3)">${d.doctorName}</div>
+        </div>
+        <span class="dp-badge ${d.queue>5?'f1':'f2'}" style="background:${d.queue>5?'rgba(59,130,246,0.15)':'rgba(16,185,129,0.15)'}; color:${d.queue>5?'var(--blue3)':'var(--green3)'}">${d.queue} navbat</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <span class="sched-badge work" style="font-size:11px">🕗 ${d.workStart}–${d.workEnd}</span>
+        <span class="sched-badge lunch" style="font-size:11px">🍽 ${d.lunchStart}–${d.lunchEnd}</span>
+      </div>
+      <div class="dp-queue-n" style="color:${floorColor(d.floor)}">${d.queue}</div>
+      <div style="font-size:12px;color:var(--text3)">Navbatdagi bemorlar</div>
+      <button class="dp-next-btn" ${d.queue===0?'disabled':''} onclick="advanceQueue('${d.id}')">▶ Keyingi bemorni chaqirish</button>
+    </div>
+  `).join('')
+}
+
+// MODAL
+function openModal(id){
+  selectedDept = depts.find(d=>d.id===id)
+  document.getElementById('modal-dept-name').textContent = `${selectedDept.name} — Navbatga yozilish`
+  document.getElementById('patient-name').value=''
+  document.getElementById('patient-keyword').value=''
+  document.getElementById('ticket-result').style.display='none'
+  document.getElementById('photo-prev').style.display='none'
+  document.getElementById('photo-icon').style.display='block'
+  document.getElementById('photo-txt').textContent='Rasm yuklash uchun bosing yoki sudrang'
+  photoData=null
+  document.getElementById('book-modal').classList.add('open')
+}
+function closeModal(){ document.getElementById('book-modal').classList.remove('open') }
+document.getElementById('book-modal').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeModal() })
+
+function handlePhoto(input){
+  const file=input.files[0]; if(!file) return
+  const reader=new FileReader()
+  reader.onload=e=>{
+    photoData=e.target.result
+    document.getElementById('photo-prev').src=photoData
+    document.getElementById('photo-prev').style.display='block'
+    document.getElementById('photo-icon').style.display='none'
+    document.getElementById('photo-txt').textContent=file.name
+  }
+  reader.readAsDataURL(file)
+}
+
+async function confirmBook(){
+  const name=(document.getElementById('patient-name').value.trim())||'Bemor'
+  const keyword=document.getElementById('patient-keyword').value.trim()
+  const finalName = keyword ? `${name} [${keyword}]` : name
+  const r=await fetch('/api/queue/book',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({departmentId:selectedDept.id,patientName:finalName,patientPhoto:photoData})})
+  const data=await r.json()
+  document.getElementById('ticket-num').textContent=data.ticket_code
+  document.getElementById('ticket-wait').textContent=`Taxminiy kutish: ~${waitLabel(selectedDept)}`
+  document.getElementById('ticket-result').style.display='block'
+  await loadDepts()
+}
+
+async function advanceQueue(id){
+  await fetch(`/api/queue/${id}/advance`,{method:'POST'})
+  await loadDepts()
+}
+
+// AI
+async function sendAI(){
+  const input=document.getElementById('ai-input')
+  const text=input.value.trim(); if(!text) return
+  input.value=''
+  addMsg('user',text)
+  aiHistory.push({role:'user',content:text})
+  addMsg('bot','...',true)
+  const r=await fetch('/api/departments/ai-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,history:aiHistory.slice(-6)})})
+  const data=await r.json()
+  document.querySelector('.typing')?.remove()
+  addMsg('bot',data.reply)
+  aiHistory.push({role:'assistant',content:data.reply})
+}
+function quickMsg(t){ document.getElementById('ai-input').value=t; sendAI() }
+function addMsg(role,text,typing=false){
+  const el=document.createElement('div')
+  el.className=`ai-msg ${role}${typing?' typing':''}`
+  el.textContent=text
+  const msgs=document.getElementById('ai-msgs')
+  msgs.appendChild(el)
+  msgs.scrollTop=msgs.scrollHeight
+}
+
+async function matchSymptom(){
+  const text=document.getElementById('sym-input').value.trim(); if(!text) return
+  const r=await fetch('/api/departments/match-symptom',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})
+  const data=await r.json()
+  const res=document.getElementById('sym-result')
+  res.style.display='block'
+  const m=data.match
+  res.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:18px">✅</span>
+      <span style="font-weight:700;font-size:16px">${m.name}</span>
+      <span class="dept-floor-badge ${floorClass(m.floor)}">${m.floor}-Qavat • ${m.room}-xona</span>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">${data.reason||''}</div>
+    <div style="font-size:12px;color:var(--text3)">Shifokor: ${m.doctorName} • Navbat: ${m.queue} kishi • Kutish: ~${waitLabel(m)}</div>
+    <button class="book-btn" style="margin-top:12px" onclick="openModal('${m.id}')">Navbatga yozilish →</button>
+  `
+}
+
+function observeFadeUp(){
+  const obs=new IntersectionObserver(entries=>entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible') }),{threshold:.1})
+  document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el))
+}
+
+// INIT
+window.addEventListener('load',()=>{
+  initParticles()
+  init3D()
+  loadDepts()
+  setInterval(loadDepts, 5000)
+  observeFadeUp()
+})
+</script>
+</body>
+</html>

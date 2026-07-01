@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: medcenter-navbat
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run migrate && npm run seed && npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: medcenter-db
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+databases:
+  - name: medcenter-db
+    plan: free
